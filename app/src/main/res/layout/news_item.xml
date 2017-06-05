@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#FFFFFF"
+                android:minHeight="@dimen/recycler_view_item_height">
+
+    <ImageView
+        android:id="@+id/newsImg_imgView"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_margin="16dp"
+        android:background="@android:color/black"
+        android:src="@drawable/ic_menu_gallery"/>
+
+
+    <TextView
+        android:id="@+id/newsTitle_txtView"
+        style="@style/TextAppearance.AppCompat.Body2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignTop="@+id/newsImg_imgView"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="98dp"
+        android:ellipsize="marquee"
+        android:maxLines="2"
+        android:text="Tin moi!"/>
+
+    <TextView
+        android:id="@+id/newsPublicDate_txtView"
+        style="@style/TextAppearance.AppCompat.Caption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignBottom="@+id/newsImg_imgView"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="98dp"
+        android:text="4 days ago"/>
+
+</RelativeLayout>

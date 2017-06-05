@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="nav_width">320dp</dimen>
+    <dimen name="nav_icon_horizontal_margin">24dp</dimen>
+    <dimen name="recycler_view_item_height">108dp</dimen>
+</resources>
