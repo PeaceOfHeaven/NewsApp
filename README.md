@@ -16,15 +16,18 @@ I'm using **[Model View Presenter](https://en.wikipedia.org/wiki/Model%E2%80%93v
 
 **[Overdraw](https://developer.android.com/studio/profile/dev-options-overdraw.html)** avoid overdraw could help your app perf
 
+Because my friend doesn't update RESTful API currently, so i have to use current RESTful API design to make the app
+
 
 - **Next goals**
 
 |               |   Activity    |    
 | ------------- |:-------------:|
 |1| Place Holder UI |
-|2| Apply more about material design |
-|3| Implement search functional |
-|4| Think about caching data in json format in file system approach instead of caching in database |
+|2| Unit and Integration testing |
+|3| Apply more about material design |
+|4| Implement bookmark feature |
+|5| Think about caching data in json format in file system approach instead of caching in database |
 
 
 
