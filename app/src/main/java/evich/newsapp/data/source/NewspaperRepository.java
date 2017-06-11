@@ -1,17 +1,16 @@
 package evich.newsapp.data.source;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.util.SparseIntArray;
-
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import evich.newsapp.dagger.module.ApplicationModule;
 import evich.newsapp.data.News;
-import evich.newsapp.data.source.local.NewspaperLocalDataSource;
-import evich.newsapp.data.source.remote.NewspaperRemoteDataSource;
 import evich.newsapp.helper.NewspaperHelper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -19,40 +18,29 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Created by W8-64 on 14/05/2016.
  */
+@Singleton
 public class NewspaperRepository implements NewspaperDataSource {
 
-    private static NewspaperRepository mNewspaperRepository;
-    private NewspaperRemoteDataSource mNewspaperRemoteDataSource;
-    private NewspaperLocalDataSource mNewspaperLocalDataSource;
+    public static final int MAX_NEWS = 30;
 
-    /**
-     * This variable has package local visibility so it can be accessed from tests.
-     */
-    Map<String, Map<String, News>> mBunchOfNewsByChannel;
+    private final NewspaperDataSource mNewspaperRemoteDataSource;
+    private final NewspaperDataSource mNewspaperLocalDataSource;
 
-    private SparseIntArray mChannelNeedChanged;
+    private Map<String, List<News>> mBunchOfNewsByChannel;
 
-    private NewspaperRepository(NewspaperRemoteDataSource newspaperRemoteDataSource,
-                                NewspaperLocalDataSource newspaperLocalDataSource) {
+    private static final ArrayList<String> mSupportedChannels = new ArrayList<>();
+    static {
+        mSupportedChannels.addAll(Arrays.asList(NewspaperHelper.getNewsChannels()));
+    }
+
+    @Inject
+    public NewspaperRepository(@ApplicationModule.Remote NewspaperDataSource newspaperRemoteDataSource,
+                               @ApplicationModule.Local NewspaperDataSource newspaperLocalDataSource) {
+        checkNotNull(newspaperLocalDataSource);
+        checkNotNull(newspaperRemoteDataSource);
+
         mNewspaperRemoteDataSource = newspaperRemoteDataSource;
         mNewspaperLocalDataSource = newspaperLocalDataSource;
-
-        mChannelNeedChanged = new SparseIntArray();
-    }
-
-    public static NewspaperRepository getInstance(NewspaperRemoteDataSource
-                                                          newspaperRemoteDataSource,
-                                                  NewspaperLocalDataSource
-                                                          newspaperLocalDataSource) {
-        if (mNewspaperRepository == null) {
-            mNewspaperRepository = new NewspaperRepository(newspaperRemoteDataSource,
-                    newspaperLocalDataSource);
-        }
-        return mNewspaperRepository;
-    }
-
-    public static void destroyInstance() {
-        mNewspaperRepository = null;
     }
 
     private List<NewsRepositoryObserver> mObservers = new
@@ -70,122 +58,92 @@ public class NewspaperRepository implements NewspaperDataSource {
         }
     }
 
-    private void notifyContentObserver(String channel, int newsRetrieveParam) {
+    private void notifyContentObserver(String channel) {
         for (NewsRepositoryObserver observer : mObservers) {
-            if (observer.onNewsNeedChanged(channel, newsRetrieveParam) == true) {
-                break;
-            }
+            observer.onUpdatedNews(channel);
         }
     }
 
-    @Nullable
     @Override
-    public List<News> getNewsByChannel(String channel) {
-        checkNotNull(channel, "channel title cannot be null");
+    public List<News> getNews(String channel) {
+        if(!mSupportedChannels.contains(channel)) {
+            throw new IllegalArgumentException(channel + " not supported!");
+        }
+        List<News> bunchOfNews;
 
-        List<News> bunchOfNews = null;
-
-        if (cachedNewsByChannelAvailable(channel)) {
-            bunchOfNews = getCachedNewsByChannel(channel);
+        if (cachedNewsAvailable(channel)) {
+            return getCachedNews(channel);
         } else {
-            bunchOfNews = mNewspaperLocalDataSource.getNewsByChannel(channel);
+            bunchOfNews = mNewspaperLocalDataSource.getNews(channel);
         }
 
-        int channelType = NewspaperHelper.getTypeChannel(channel);
-        int newsRetrieveParams = mChannelNeedChanged.get(channelType);
-
-        if (bunchOfNews == null || bunchOfNews.isEmpty() || newsRetrieveParams ==
-                NewsRetrieveParams.FORCE_REFRESH) {
-            bunchOfNews = mNewspaperRemoteDataSource.getNewsByChannel(channel);
-            saveNewsInLocalDataSource(bunchOfNews);
-            bunchOfNews = mNewspaperLocalDataSource.getNewsByChannel(channel);
-
-        } else if (newsRetrieveParams == NewsRetrieveParams.FORCE_LOAD_MORE) {
-            long time = Long.valueOf(bunchOfNews.get(bunchOfNews.size() - 1).getPubdate());
-            bunchOfNews = mNewspaperRemoteDataSource.loadMoreNewsByChannel(channel, time);
-            saveNewsInLocalDataSource(bunchOfNews);
+        if (bunchOfNews == null || bunchOfNews.isEmpty()) {
+            bunchOfNews = mNewspaperRemoteDataSource.getNews(channel);
+            mNewspaperLocalDataSource.saveBunchOfNews(bunchOfNews);
+            bunchOfNews = mNewspaperLocalDataSource.getNews(channel);
         }
-        mChannelNeedChanged.put(channelType, NewsRetrieveParams.NONE);
         processLoadedNews(channel, bunchOfNews);
 
-        return !mBunchOfNewsByChannel.containsKey(channel) ?
-                null : new ArrayList<>(mBunchOfNewsByChannel.get
-                (channel).values());
-    }
-
-    private void saveNewsInLocalDataSource(List<News> bunchOfNews) {
-        if (bunchOfNews != null && !bunchOfNews.isEmpty()) {
-            for (News news : bunchOfNews) {
-                mNewspaperLocalDataSource.saveSingleNews(news);
-            }
-        }
+        return mBunchOfNewsByChannel.get(channel);
     }
 
     private void processLoadedNews(String channel, List<News> bunchOfNews) {
-        if (bunchOfNews == null) {
+        if (bunchOfNews == null || bunchOfNews.isEmpty()) {
             return;
         }
         if (mBunchOfNewsByChannel == null) {
             mBunchOfNewsByChannel = new LinkedHashMap<>();
         }
 
-        Map<String, News> bunchOfCachedNews = mBunchOfNewsByChannel.get(channel);
+        List<News> bunchOfCachedNews = mBunchOfNewsByChannel.get(channel);
         if (bunchOfCachedNews == null) {
-            bunchOfCachedNews = new LinkedHashMap<>();
+            bunchOfCachedNews = new ArrayList<>();
         }
-        for (int i = 0; i < bunchOfNews.size(); i++) {
-            News news = bunchOfNews.get(i);
-            bunchOfCachedNews.put(news.getId(), news);
+        bunchOfCachedNews.clear();
+        for (News news : bunchOfNews) {
+            bunchOfCachedNews.add(news);
         }
         mBunchOfNewsByChannel.put(channel, bunchOfCachedNews);
     }
 
-    public boolean cachedNewsByChannelAvailable(String channel) {
+    public boolean cachedNewsAvailable(String channel) {
         return mBunchOfNewsByChannel != null && mBunchOfNewsByChannel.containsKey(channel);
     }
 
-    public List<News> getCachedNewsByChannel(String channel) {
-        return mBunchOfNewsByChannel == null && !mBunchOfNewsByChannel.containsKey(channel) ?
-                null : new ArrayList<>(mBunchOfNewsByChannel.get
-                (channel).values());
-    }
-
-    @Override
-    public void saveSingleNews(@NonNull News news) {
-        mNewspaperLocalDataSource.saveSingleNews(news);
-
-        if (mBunchOfNewsByChannel == null) {
-            mBunchOfNewsByChannel = new LinkedHashMap<>();
+    public List<News> getCachedNews(String channel) {
+        if(!mSupportedChannels.contains(channel)) {
+            throw new IllegalArgumentException(channel + " not supported!");
         }
-        Map<String, News> bunchOfCachedNews = mBunchOfNewsByChannel.get(NewspaperHelper
-                .getChannel(news.getChannel()));
-        if (bunchOfCachedNews == null) {
-            bunchOfCachedNews = new LinkedHashMap<>();
+        return mBunchOfNewsByChannel.get(channel);
+    }
+
+    @Override
+    public boolean saveBunchOfNews(List<News> bunchOfNews) {
+        checkNotNull(bunchOfNews);
+
+        if(mNewspaperLocalDataSource.saveBunchOfNews(bunchOfNews)) {
+            if (mBunchOfNewsByChannel == null) {
+                mBunchOfNewsByChannel = new LinkedHashMap<>();
+            }
+            String channel = bunchOfNews.get(0).getChannelTitle();
+            processLoadedNews(channel, mNewspaperLocalDataSource.getNews(channel));
+            notifyContentObserver(channel);
+            return true;
         }
-        bunchOfCachedNews.put(news.getId(), news);
+        return false;
     }
 
     @Override
-    public void refreshNews(String channel, int newsRetrieveParam) {
-        mChannelNeedChanged.put(NewspaperHelper.getTypeChannel(channel), newsRetrieveParam);
-        notifyContentObserver(channel, newsRetrieveParam);
-    }
-
-    @Override
-    public void deleteAllNewsByChannel(String channel) {
-
-    }
-
-    @Override
-    public void clearCachedNews() {
-        mNewspaperLocalDataSource.clearCachedNews();
-        if(mBunchOfNewsByChannel != null) {
-            mBunchOfNewsByChannel.clear();
+    public void refreshNews(String channel) {
+        if(!mSupportedChannels.contains(channel)) {
+            throw new IllegalArgumentException(channel + " not supported!");
         }
+        notifyContentObserver(channel);
     }
+
 
     public interface NewsRepositoryObserver {
 
-        boolean onNewsNeedChanged(String channel, int retrieveParam);
+        void onUpdatedNews(String channel);
     }
 }

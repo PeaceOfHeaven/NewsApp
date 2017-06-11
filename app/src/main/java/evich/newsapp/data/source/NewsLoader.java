@@ -13,34 +13,33 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Created by W8-64 on 17/05/2016.
  */
-public class NewsLoader extends AsyncTaskLoader<LoaderResult> implements
-        NewspaperRepository.NewsRepositoryObserver {
+public class NewsLoader extends AsyncTaskLoader<LoaderResult> {
 
     private final NewspaperRepository mNewspaperRepository;
 
-    private String mChannel;
+    private String mCurrentChannel;
     private boolean isLoading = false;
-    private int mCurrentNewsRetrieveParam;
 
-    public NewsLoader(Context context, @NonNull NewspaperRepository newspaperRepository, String channel) {
+    public NewsLoader(Context context, @NonNull NewspaperRepository newspaperRepository, String currentChannel) {
         super(context);
         mNewspaperRepository = checkNotNull(newspaperRepository, "newspaperRepository cannot be " +
                 "null");
+        mCurrentChannel = checkNotNull(currentChannel);
+    }
 
-        mChannel = checkNotNull(channel);
-        mCurrentNewsRetrieveParam = NewsRetrieveParams.NONE;
+    public void setCurrentChannel(String currentChannel) {
+        mCurrentChannel = currentChannel;
     }
 
     @Override
     protected void onStartLoading() {
-        if (mNewspaperRepository.cachedNewsByChannelAvailable(mChannel)) {
-            deliverResult(new NewsLoaderResult(mChannel, mCurrentNewsRetrieveParam, mNewspaperRepository.getCachedNewsByChannel(mChannel)));
+        if (mNewspaperRepository.cachedNewsAvailable(mCurrentChannel)) {
+            deliverResult(new NewsLoaderResult(mCurrentChannel,
+                    mNewspaperRepository.getCachedNews(mCurrentChannel)));
         }
 
-        // Begin monitoring the underlying data source.
-        mNewspaperRepository.addContentObserver(this);
-
-        if (takeContentChanged() || !mNewspaperRepository.cachedNewsByChannelAvailable(mChannel)) {
+        if (takeContentChanged() || !mNewspaperRepository
+                                    .cachedNewsAvailable(mCurrentChannel)) {
             // When a change has  been delivered or the repository cache isn't available, we force
             // a load.
             forceLoad();
@@ -50,7 +49,7 @@ public class NewsLoader extends AsyncTaskLoader<LoaderResult> implements
     @Override
     public LoaderResult loadInBackground() {
         isLoading = true;
-        return new NewsLoaderResult(mChannel, mCurrentNewsRetrieveParam, mNewspaperRepository.getNewsByChannel(mChannel));
+        return new NewsLoaderResult(mCurrentChannel, mNewspaperRepository.getNews(mCurrentChannel));
     }
 
     public boolean isLoading() {
@@ -59,7 +58,7 @@ public class NewsLoader extends AsyncTaskLoader<LoaderResult> implements
 
     @Override
     public void deliverResult(LoaderResult result) {
-        setLoaderLoaded();
+        isLoading = false;
 
         if (isReset()) {
             return;
@@ -72,42 +71,23 @@ public class NewsLoader extends AsyncTaskLoader<LoaderResult> implements
 
     @Override
     protected void onStopLoading() {
-        setLoaderLoaded();
-        cancelLoad();
-    }
-
-    private void setLoaderLoaded() {
         isLoading = false;
-        mCurrentNewsRetrieveParam = NewsRetrieveParams.NONE;
+        cancelLoad();
     }
 
     @Override
     protected void onReset() {
         onStopLoading();
-        mNewspaperRepository.removeContentObserver(this);
-    }
-
-    @Override
-    public boolean onNewsNeedChanged(String channel, int newsRetrieveParam) {
-        if (isStarted() && !isLoading) {
-            mChannel = channel;
-            mCurrentNewsRetrieveParam = newsRetrieveParam;
-            forceLoad();
-            return true;
-        }
-        return false;
     }
 
     public final class NewsLoaderResult implements LoaderResult {
 
         private String mChannel;
         private List<News> mBunchOfNews;
-        private int mNewsRetrieveParam;
 
-        private NewsLoaderResult(String channel, int newsRetrieveParam, List<News> result) {
+        private NewsLoaderResult(String channel, List<News> result) {
             mChannel = channel;
             mBunchOfNews = result;
-            mNewsRetrieveParam = newsRetrieveParam;
         }
 
         @Override
@@ -121,10 +101,6 @@ public class NewsLoader extends AsyncTaskLoader<LoaderResult> implements
 
         public List<News> getBunchOfNews() {
             return mBunchOfNews;
-        }
-
-        public int getNewsRetrieveParams() {
-            return mNewsRetrieveParam;
         }
     }
 }

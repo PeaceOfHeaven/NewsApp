@@ -32,7 +32,7 @@ public class NewsJsonParser {
                     news.setLink(newsJsonObject.getString("link"));
                     news.setImgUrl(newsJsonObject.getString("image"));
                     news.setPubdate(newsJsonObject.getString("pubDate"));
-                    news.setChannel(newsJsonObject.getInt("typechannel"));
+                    news.setChannelType(newsJsonObject.getInt("typechannel"));
                     news.setNewspaperType(newsJsonObject.getInt("typenew"));
 
                     bunchOfNews.add(news);

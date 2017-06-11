@@ -10,40 +10,45 @@ import android.view.ViewGroup;
 
 import com.astuetz.PagerSlidingTabStrip;
 
+import javax.inject.Inject;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import evich.newsapp.BaseActivity;
+import evich.newsapp.NewsApplication;
 import evich.newsapp.R;
-import evich.newsapp.data.source.NewspaperRepository;
-import evich.newsapp.data.source.local.NewspaperLocalDataSource;
-import evich.newsapp.data.source.remote.NewspaperRemoteDataSource;
+import evich.newsapp.dagger.component.DaggerNewsActivityComponent;
+import evich.newsapp.dagger.component.NewsActivityComponent;
+import evich.newsapp.dagger.module.NewsActivityModule;
 import evich.newsapp.helper.NewspaperHelper;
 
 public class NewsActivity extends BaseActivity {
 
-    private NewsContract.Presenter mNewsPresenter;
-    private NewspaperRepository mRepository;
+    @BindView(R.id.news_pager)
+    ViewPager mNewsPager;
 
-    // private TabLayout mTabLayout;
-    private ViewPager mPager;
+    @Inject
+    NewsPresenter mNewsPresenter;
+
     private NewsPagerAdapter mPagerAdapter;
+
+    public NewsActivityComponent getActivityComponent() {
+        return DaggerNewsActivityComponent.builder()
+                .applicationComponent(((NewsApplication) getApplication())
+                .getApplicationComponent())
+                .newsActivityModule(new NewsActivityModule(this))
+                .build();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.AppTheme);
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.app_bar_news);
 
-        // Create the presenter
-        NewspaperRemoteDataSource newspaperRemoteDataSource = NewspaperRemoteDataSource
-                .getInstance(this);
-        NewspaperLocalDataSource newspaperLocalDataSource = NewspaperLocalDataSource.getInstance
-                (this);
-
-        mRepository = NewspaperRepository.getInstance(newspaperRemoteDataSource,
-                newspaperLocalDataSource);
-
-        mNewsPresenter = new NewsPresenter(this, getSupportLoaderManager
-                (), mRepository);
+        ButterKnife.bind(this);
+        getWindow().setBackgroundDrawable(null);
+        getActivityComponent().inject(this);
 
         initialize();
     }
@@ -54,15 +59,12 @@ public class NewsActivity extends BaseActivity {
     }
 
     private void initializeViews() {
-        // mTabLayout = (TabLayout) findViewById(R.id.tab_layout);
-        mPager = (ViewPager) findViewById(R.id.pager);
-        mPager.setOffscreenPageLimit(3);
+        mNewsPager.setOffscreenPageLimit(NewspaperHelper.NUM_OF_CHANNELS);
         mPagerAdapter = new NewsPagerAdapter(getSupportFragmentManager());
-        mPager.setAdapter(mPagerAdapter);
+        mNewsPager.setAdapter(mPagerAdapter);
 
-        PagerSlidingTabStrip tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
-        tabs.setViewPager(mPager);
-        // mTabLayout.setupWithViewPager(mPager);
+        PagerSlidingTabStrip pagerTabStrip = (PagerSlidingTabStrip) findViewById(R.id.pager_tab_strip);
+        pagerTabStrip.setViewPager(mNewsPager);
     }
 
     @Override

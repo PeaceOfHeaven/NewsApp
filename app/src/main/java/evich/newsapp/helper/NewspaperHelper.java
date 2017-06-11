@@ -5,6 +5,7 @@ package evich.newsapp.helper;
  */
 public class NewspaperHelper {
 
+    public static final int NUM_OF_CHANNELS = 4;
     public static final String CHANNEL_EDUCATION = "Giáo Dục";
     public static final String CHANNEL_TECH = "Công Nghệ";
     public static final String CHANNEL_LAW = "Pháp Luật";

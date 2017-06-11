@@ -2,6 +2,7 @@ package evich.newsapp.news;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -31,7 +32,6 @@ import java.util.List;
 
 import evich.newsapp.R;
 import evich.newsapp.data.News;
-import evich.newsapp.data.source.NewsRetrieveParams;
 import evich.newsapp.helper.NetworkHelper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -120,18 +120,12 @@ public class NewsFragment extends Fragment implements NewsContract.View {
             });
         }
         mNewsRecylerView.setLayoutManager(layoutManager);
-        mNewsRecylerView.setOnLoadMoreListener(new LoadMoreRecylerView.OnLoadMoreListener() {
-            @Override
-            public void onLoadMore() {
-                mPresenter.loadNewsByChannel(mChannel, NewsRetrieveParams.FORCE_LOAD_MORE);
-            }
-        });
 
         mSwipeRefreshLayout.setScrollUpChild(mNewsRecylerView);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                mPresenter.loadNewsByChannel(mChannel, NewsRetrieveParams.FORCE_REFRESH);
+                mPresenter.loadNews(mChannel, true);
             }
         });
 
@@ -150,10 +144,10 @@ public class NewsFragment extends Fragment implements NewsContract.View {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onStart() {
+        super.onStart();
         if (NetworkHelper.isOnline(getActivity())) {
-            mPresenter.loadNewsByChannel(mChannel, NewsRetrieveParams.NONE);
+            mPresenter.loadNews(mChannel, false);
         }
     }
 
@@ -168,17 +162,6 @@ public class NewsFragment extends Fragment implements NewsContract.View {
     @Override
     public void setLoadingIndicator(boolean active) {
         loadingLayout.setVisibility(active == true ? View.VISIBLE : View.INVISIBLE);
-    }
-
-    @Override
-    public void setLoadingMoreIndicator(boolean active) {
-        if (active) {
-            mBunchOfNews.add(null);
-            mNewsAdapter.notifyItemInserted(mBunchOfNews.size() - 1);
-        } else {
-            mBunchOfNews.remove(mBunchOfNews.size() - 1);
-            mNewsAdapter.notifyItemRemoved(mBunchOfNews.size() - 1);
-        }
     }
 
     @Override
@@ -261,8 +244,11 @@ public class NewsFragment extends Fragment implements NewsContract.View {
                 if (!TextUtils.isEmpty(news.getImgUrl())) {
                     Picasso.with(newsViewHolder.itemView.getContext()).load(news.getImgUrl())
                             .into(newsViewHolder.newsImageImgView);
+                    newsViewHolder.newsImageImgView.setBackgroundColor(Color.TRANSPARENT);
                 } else {
-                    newsViewHolder.newsImageImgView.setImageBitmap(null);
+                    Picasso.with(newsViewHolder.itemView.getContext()).load(android.R.color.transparent)
+                            .into(newsViewHolder.newsImageImgView);
+                    newsViewHolder.newsImageImgView.setBackgroundColor(Color.TRANSPARENT);
                 }
                 newsViewHolder.newsTitleTxtView.setText(news.getTitle());
 

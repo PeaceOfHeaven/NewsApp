@@ -16,8 +16,6 @@ public interface NewsContract {
 
         void setLoadingIndicator(boolean active);
 
-        void setLoadingMoreIndicator(boolean active);
-
         void setRefreshIndicator(boolean active);
 
         void showNews(List<News> bunchOfNews);
@@ -33,7 +31,7 @@ public interface NewsContract {
 
         void detachViewByChannel(String channel);
 
-        void loadNewsByChannel(String channel, int newsRetrieveParams);
+        void loadNews(String channel, boolean refresh);
 
         void openNewsDetail(News requestedNews);
     }

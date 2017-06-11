@@ -27,12 +27,10 @@ public class NewsDetailActivity extends AppCompatActivity {
         webSettings.setLoadsImagesAutomatically(true);
         webView.setWebViewClient(new MyWebViewClient());
 
-        String link = "";
 
         Intent intent = getIntent();
         if(intent != null) {
-            link = intent.getExtras().getString("link");
-            webView.loadUrl(link);
+            webView.loadUrl(intent.getExtras().getString("link"));
         }
     }
 

@@ -1,8 +1,5 @@
 package evich.newsapp.data.source;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import java.util.List;
 
 import evich.newsapp.data.News;
@@ -12,14 +9,9 @@ import evich.newsapp.data.News;
  */
 public interface NewspaperDataSource {
 
-    @Nullable
-    public List<News> getNewsByChannel(String channel);
+    List<News> getNews(String channel);
 
-    public void saveSingleNews(@NonNull News news);
+    boolean saveBunchOfNews(List<News> bunchOfNews);
 
-    public void refreshNews(String channel, int newsRetrieveParams);
-
-    public void deleteAllNewsByChannel(String channel);
-
-    public void clearCachedNews();
+    void refreshNews(String channel);
 }
