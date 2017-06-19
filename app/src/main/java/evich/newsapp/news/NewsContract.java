@@ -22,6 +22,8 @@ public interface NewsContract {
 
         void showLoadingNewsError();
 
+        void showNetworkNotAvailable();
+
         void showNewsDetailUi(String link);
     }
 

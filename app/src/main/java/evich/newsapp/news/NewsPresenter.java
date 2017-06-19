@@ -19,6 +19,7 @@ import evich.newsapp.data.News;
 import evich.newsapp.data.source.LoaderResult;
 import evich.newsapp.data.source.NewsLoader;
 import evich.newsapp.data.source.NewspaperRepository;
+import evich.newsapp.helper.NetworkHelper;
 import evich.newsapp.helper.NewspaperHelper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -70,6 +71,9 @@ public class NewsPresenter implements NewsContract.Presenter, LoaderManager
     public void loadNews(String channel, boolean refresh) {
         NewsContract.View view = mViewsByChannel.get(channel);
         if (refresh) {
+            if(!NetworkHelper.isOnline(mContext)) {
+                view.showNetworkNotAvailable();
+            }
             view.setRefreshIndicator(true);
             mNewspaperRepository.refreshNews(channel);
             return;
@@ -108,6 +112,7 @@ public class NewsPresenter implements NewsContract.Presenter, LoaderManager
 
     @Override
     public void finish() {
+        mViewsByChannel.clear();
         mNewspaperRepository.removeContentObserver(this);
     }
 
@@ -168,9 +173,6 @@ public class NewsPresenter implements NewsContract.Presenter, LoaderManager
 
     @Override
     public void onUpdatedNews(final String channel) {
-        // This means our views are visible or going to be visible
-        Log.d("Presenter", "Notify on " +  Thread.currentThread().getName());
-
         mHandler.post(new Runnable() {
             @Override
             public void run() {

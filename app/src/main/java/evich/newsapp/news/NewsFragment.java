@@ -1,21 +1,21 @@
 package evich.newsapp.news;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,9 +30,10 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import evich.newsapp.R;
 import evich.newsapp.data.News;
-import evich.newsapp.helper.NetworkHelper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -45,14 +46,20 @@ public class NewsFragment extends Fragment implements NewsContract.View {
 
     private NewsContract.Presenter mPresenter;
 
-    private LoadMoreRecylerView mNewsRecylerView;
+    @BindView(R.id.root_layout)
+    ViewGroup rootLayout;
+
+    @BindView(R.id.news_recyclerView)
+    LoadMoreRecylerView mNewsRecylerView;
+
+    @BindView(R.id.loadingLayout)
+    FrameLayout loadingLayout;
+
+    @BindView(R.id.swiperefresh)
+    ScrollChildSwipeRefreshLayout mSwipeRefreshLayout;
+
     private NewsAdapter mNewsAdapter;
-    private ScrollChildSwipeRefreshLayout mSwipeRefreshLayout;
-
-    private List<News> mBunchOfNews;
     private String mChannel;
-
-    private FrameLayout loadingLayout;
 
     public static Fragment getInstance(@NonNull String channel) {
         checkNotNull(channel);
@@ -61,23 +68,10 @@ public class NewsFragment extends Fragment implements NewsContract.View {
         Bundle args = new Bundle();
         args.putString(CHANNEL_ARGUMENT_KEY, channel);
         fragment.setArguments(args);
-
         return fragment;
     }
 
     public NewsFragment() {
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        Log.d("News", "onAttach");
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        Log.d("News", "onDetach");
     }
 
     @Nullable
@@ -85,21 +79,15 @@ public class NewsFragment extends Fragment implements NewsContract.View {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable
     Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_news, container, false);
+        ButterKnife.bind(this, view);
 
-        mSwipeRefreshLayout = (ScrollChildSwipeRefreshLayout) view
-                .findViewById(R.id.swiperefresh);
         mSwipeRefreshLayout.setColorSchemeColors(
                 ContextCompat.getColor(getActivity(), R.color.colorPrimary),
                 ContextCompat.getColor(getActivity(), R.color.colorAccent),
                 ContextCompat.getColor(getActivity(), R.color.colorPrimaryDark));
-
-        loadingLayout = (FrameLayout) view.findViewById(R.id.loadingLayout);
-
-        mNewsRecylerView = (LoadMoreRecylerView) view.findViewById(R.id.news_recyclerView);
-
         boolean screenSmall = getResources().getBoolean(R.bool.screen_small);
 
-        RecyclerView.LayoutManager layoutManager = null;
+        RecyclerView.LayoutManager layoutManager;
         if (screenSmall) {
             layoutManager = new LinearLayoutManager(getActivity());
             mNewsRecylerView.addItemDecoration(new SpaceItemDecoration(getResources()
@@ -133,25 +121,19 @@ public class NewsFragment extends Fragment implements NewsContract.View {
         if (args != null) {
             mChannel = args.getString(CHANNEL_ARGUMENT_KEY);
         }
-        if (mBunchOfNews == null) {
-            mBunchOfNews = new ArrayList<>();
-        }
 
-        mNewsAdapter = new NewsAdapter(mBunchOfNews, mNewsItemListener);
+        mNewsAdapter = new NewsAdapter(new ArrayList<News>(), mNewsItemListener);
         mNewsRecylerView.setAdapter(mNewsAdapter);
-
         return view;
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        if (NetworkHelper.isOnline(getActivity())) {
-            mPresenter.loadNews(mChannel, false);
-        }
+        mPresenter.loadNews(mChannel, false);
     }
 
-    private NewsAdapter.NewsItemListener mNewsItemListener = new NewsAdapter.NewsItemListener() {
+    private NewsItemListener mNewsItemListener = new NewsItemListener() {
 
         @Override
         public void onNewsClicked(News news) {
@@ -170,9 +152,13 @@ public class NewsFragment extends Fragment implements NewsContract.View {
     }
 
     @Override
+    public void showNetworkNotAvailable() {
+        Snackbar.make(rootLayout, "Network not available!", Snackbar.LENGTH_SHORT).show();
+    }
+
+    @Override
     public void showNews(List<News> bunchOfNews) {
         if (bunchOfNews != null) {
-            mBunchOfNews = bunchOfNews;
             mNewsAdapter.replaceData(bunchOfNews);
 
             new Handler().postDelayed(new Runnable() {
@@ -206,7 +192,7 @@ public class NewsFragment extends Fragment implements NewsContract.View {
         startActivity(intent);
     }
 
-    private static class NewsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    class NewsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         private final int VIEW_TYPE_ITEM = 0;
         private final int VIEW_TYPE_LOADING = 1;
@@ -223,7 +209,7 @@ public class NewsFragment extends Fragment implements NewsContract.View {
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-            RecyclerView.ViewHolder holder = null;
+            RecyclerView.ViewHolder holder;
 
             if (viewType == VIEW_TYPE_ITEM) {
                 View view = inflater.inflate(R.layout.news_item, parent, false);
@@ -242,11 +228,11 @@ public class NewsFragment extends Fragment implements NewsContract.View {
             if (holder instanceof ViewHolder) {
                 ViewHolder newsViewHolder = (ViewHolder) holder;
                 if (!TextUtils.isEmpty(news.getImgUrl())) {
-                    Picasso.with(newsViewHolder.itemView.getContext()).load(news.getImgUrl())
+                    Picasso.with(getActivity()).load(news.getImgUrl())
                             .into(newsViewHolder.newsImageImgView);
                     newsViewHolder.newsImageImgView.setBackgroundColor(Color.TRANSPARENT);
                 } else {
-                    Picasso.with(newsViewHolder.itemView.getContext()).load(android.R.color.transparent)
+                    Picasso.with(getActivity()).load(android.R.color.transparent)
                             .into(newsViewHolder.newsImageImgView);
                     newsViewHolder.newsImageImgView.setBackgroundColor(Color.TRANSPARENT);
                 }
@@ -283,8 +269,13 @@ public class NewsFragment extends Fragment implements NewsContract.View {
         }
 
         public void replaceData(List<News> bunchOfNews) {
-            mBunchOfNews = bunchOfNews;
-            notifyDataSetChanged();
+            final NewsDiffCallback diffCallback
+                    = new NewsDiffCallback(mBunchOfNews, bunchOfNews);
+            final DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
+
+            mBunchOfNews.clear();
+            mBunchOfNews.addAll(bunchOfNews);
+            diffResult.dispatchUpdatesTo(this);
         }
 
         public List<News> getData() {
@@ -293,32 +284,66 @@ public class NewsFragment extends Fragment implements NewsContract.View {
 
         public class ViewHolder extends RecyclerView.ViewHolder {
 
+            @BindView(R.id.newsImg_imgView)
             public ImageView newsImageImgView;
+
+            @BindView(R.id.newsTitle_txtView)
             public TextView newsTitleTxtView;
+
+            @BindView(R.id.newsPublicDate_txtView)
             public TextView newsPubdateTxtView;
 
             public ViewHolder(View itemView) {
                 super(itemView);
-
-                newsImageImgView = (ImageView) itemView.findViewById(R.id.newsImg_imgView);
-                newsTitleTxtView = (TextView) itemView.findViewById(R.id
-                        .newsTitle_txtView);
-                newsPubdateTxtView = (TextView) itemView.findViewById(R.id.newsPublicDate_txtView);
+                ButterKnife.bind(this, itemView);
             }
         }
 
         public class LoadingViewHolder extends RecyclerView.ViewHolder {
-
+            @BindView(R.id.loadingMoreProgressBar)
             public ProgressBar progressBar;
 
             public LoadingViewHolder(View itemView) {
                 super(itemView);
-                progressBar = (ProgressBar) itemView.findViewById(R.id.loadingMoreProgressBar);
+                ButterKnife.bind(this, itemView);
             }
         }
+    }
 
-        public interface NewsItemListener {
-            void onNewsClicked(News news);
+    public interface NewsItemListener {
+        void onNewsClicked(News news);
+    }
+
+    static class NewsDiffCallback extends DiffUtil.Callback {
+
+        private final List<News> mOldNewsList;
+        private final List<News> mNewNewsList;
+
+        public NewsDiffCallback(List<News> oldNewsList, List<News> newNewsList) {
+            mOldNewsList = oldNewsList;
+            mNewNewsList = newNewsList;
+        }
+
+        @Override
+        public int getOldListSize() {
+            return mOldNewsList.size();
+        }
+
+        @Override
+        public int getNewListSize() {
+            return mNewNewsList.size();
+        }
+
+        @Override
+        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+            return mOldNewsList.get(oldItemPosition).getId()
+                    .equals(mNewNewsList.get(newItemPosition));
+        }
+
+        @Override
+        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+            return mOldNewsList.get(oldItemPosition).getId()
+                    .equals(mNewNewsList.get(newItemPosition));
         }
     }
 }

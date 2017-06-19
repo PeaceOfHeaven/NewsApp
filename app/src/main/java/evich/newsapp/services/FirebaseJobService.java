@@ -13,6 +13,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import evich.newsapp.NewsApplication;
+import evich.newsapp.dagger.component.ApplicationComponent;
 import evich.newsapp.data.News;
 import evich.newsapp.data.source.NewspaperRepository;
 import evich.newsapp.data.source.remote.NewsApi;
@@ -62,19 +63,13 @@ public class FirebaseJobService extends JobService {
 
     @Override
     public boolean onStartJob(final JobParameters jobParameters) {
-        Log.d(TAG, "on start job: " + Thread.currentThread().getName());
-        Log.d(TAG, "on start job: " + jobParameters.getTag());
-
         if (jobParameters.getTag().equals(UPDATE_NEWS)) {
             mThreadPool.execute(new Runnable() {
                 @Override
                 public void run() {
-                    Log.d(TAG, "Kickoff service");
-                    NewsApi newsApi = ((NewsApplication) getApplication())
-                            .getApplicationComponent().getNewsApi();
+                    NewsApi newsApi = getApplicationComponent().getNewsApi();
                     String[] channels = NewspaperHelper.getNewsChannels();
                     for (String channel : channels) {
-                        Log.d(TAG, "GET: " + channel);
                         List<News> bunchOfNews;
                         try {
                             bunchOfNews = newsApi.getNews(NewspaperHelper.getTypeChannel(channel)+"",
@@ -99,13 +94,17 @@ public class FirebaseJobService extends JobService {
             mThreadPool.execute(new Runnable() {
                 @Override
                 public void run() {
-                    ((NewsApplication) getApplication())
-                            .getApplicationComponent()
+                    getApplicationComponent()
                             .getNewspaperRepository()
                             .saveBunchOfNews(bunchOfNews);
                 }
             });
         }
+    }
+
+    private ApplicationComponent getApplicationComponent() {
+        return ((NewsApplication) getApplication())
+                .getApplicationComponent();
     }
 
     @Override

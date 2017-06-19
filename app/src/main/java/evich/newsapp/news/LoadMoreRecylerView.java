@@ -19,13 +19,11 @@ public class LoadMoreRecylerView extends RecyclerView {
     private OnLoadMoreListener mOnLoadMoreListener;
 
     public LoadMoreRecylerView(Context context) {
-        super(context);
-        init();
+        this(context, null);
     }
 
     public LoadMoreRecylerView(Context context, @Nullable AttributeSet attrs) {
-        super(context, attrs);
-        init();
+        this(context, attrs, 0);
     }
 
     public LoadMoreRecylerView(Context context, @Nullable AttributeSet attrs, int defStyle) {

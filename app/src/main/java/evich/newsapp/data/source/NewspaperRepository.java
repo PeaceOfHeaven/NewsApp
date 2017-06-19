@@ -47,6 +47,7 @@ public class NewspaperRepository implements NewspaperDataSource {
             ArrayList<NewsRepositoryObserver>();
 
     public void addContentObserver(NewsRepositoryObserver observer) {
+        checkNotNull(observer);
         if (!mObservers.contains(observer)) {
             mObservers.add(observer);
         }
@@ -83,7 +84,6 @@ public class NewspaperRepository implements NewspaperDataSource {
             bunchOfNews = mNewspaperLocalDataSource.getNews(channel);
         }
         processLoadedNews(channel, bunchOfNews);
-
         return mBunchOfNewsByChannel.get(channel);
     }
 

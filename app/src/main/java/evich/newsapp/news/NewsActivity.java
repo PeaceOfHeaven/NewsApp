@@ -1,11 +1,11 @@
 package evich.newsapp.news;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.ViewGroup;
 
 import com.astuetz.PagerSlidingTabStrip;
@@ -75,8 +75,17 @@ public class NewsActivity extends BaseActivity {
 
     @Override
     protected void onDestroy() {
-        mNewsPresenter.finish();
         super.onDestroy();
+        mNewsPresenter.finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        // This is important : Hack to open a dummy activity for 200-500ms (cannot be noticed by user as it is for 500ms
+        //  and transparent floating activity and auto finishes)
+        startActivity(new Intent(this, DummyActivity.class));
+        finish();
     }
 
     private class NewsPagerAdapter extends FragmentStatePagerAdapter {
@@ -113,7 +122,6 @@ public class NewsActivity extends BaseActivity {
             mNewsPresenter.detachViewByChannel(channel);
 
             super.destroyItem(container, position, object);
-            Log.d("Newspaper", "destroyItem " + position);
         }
     }
 }

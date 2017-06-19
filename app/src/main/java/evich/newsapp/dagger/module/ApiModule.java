@@ -16,15 +16,17 @@ import retrofit2.converter.gson.GsonConverterFactory;
 @Module
 public class ApiModule {
 
+    private static Gson gson = new GsonBuilder()
+            .setLenient()
+            .create();
+
+    private static Retrofit.Builder builder =
+            new Retrofit.Builder()
+                    .baseUrl(EndPoints.BASE_URL)
+                    .addConverterFactory(GsonConverterFactory.create(gson));
+
     @Provides
     public NewsApi provideNewsApi() {
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(EndPoints.BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
-        return retrofit.create(NewsApi.class);
+        return builder.build().create(NewsApi.class);
     }
 }
