@@ -6,7 +6,7 @@ I'm using **[Model View Presenter](https://en.wikipedia.org/wiki/Model%E2%80%93v
 
 **[Dagger 2](https://github.com/google/dagger)** as a **dependency framework** that help us provides dependencies to our class. A well-known about Dagger 2 is it falcilitate **reuse** the class and to be able to **test** them independent of other classes.
 
-**[Loader API](https://developer.android.com/guide/components/loaders.html)** helps **loading data asynchronously**, as android developer site show that "If you fetch the data from another thread, perhaps with **[AsyncTask](https://developer.android.com/reference/android/os/AsyncTask.html)**, then you're responsible for **managing both the thread and the UI thread** through various **activity or fragment lifecycle events**, such as onDestroy() and **configurations changes**"
+**[Loader API](https://developer.android.com/guide/components/loaders.html)** helps **loading data asynchronously**, as android developer site show that "If you fetch the data from another thread, perhaps with **[AsyncTask](https://developer.android.com/reference/android/os/AsyncTask.html)**, then you're responsible for **managing both the thread and the UI thread** through various **activity or fragment lifecycle events**, such as onDestroy() and **configurations changes**" and easily falling down with memory leaks.
 
 **[Retrofit](http://square.github.io/retrofit/)** make it easier to communicate with **RESTful** web services. 
 
@@ -14,10 +14,11 @@ I'm using **[Model View Presenter](https://en.wikipedia.org/wiki/Model%E2%80%93v
 
 **[Picasso](http://square.github.io/picasso/)** library for loading and caching image.
 
-**[Overdraw](https://developer.android.com/studio/profile/dev-options-overdraw.html)** avoid overdraw could help your app perf
+**[Overdraw](https://developer.android.com/studio/profile/dev-options-overdraw.html)** avoid overdraw could help your app perf.
 
-Because my friend doesn't update RESTful API currently, so i have to use current RESTful API design to make the app
+**[LeakCanary](https://github.com/square/leakcanary)** a handy tool detecting memory leaks.
 
+Because my friend doesn't update RESTful API currently, so i have to use current RESTful API design to make the app.
 
 - **Next goals**
 
