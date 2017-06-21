@@ -28,6 +28,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Singleton
 public class NewspaperRemoteDataSource implements NewspaperDataSource {
 
+    private static final String TAG = NewspaperRemoteDataSource.class.getSimpleName();
     private NewsApi mNewsApi;
 
     @Inject
@@ -49,17 +50,14 @@ public class NewspaperRemoteDataSource implements NewspaperDataSource {
         return fetchNewsByChannelWithTime(channel, System.currentTimeMillis());
     }
 
-    public List<News> loadMoreNewsByChannel(String channel, long timeInMillis) {
-        checkNotNull(channel);
-        return fetchNewsByChannelWithTime(channel, timeInMillis);
-    }
-
     private List<News> fetchNewsByChannelWithTime(String channel, long timeInMillis) {
-        Log.d("Nhat", channel);
+        Log.d(TAG, channel);
         List<News> bunchOfNews = null;
         try {
-            bunchOfNews = mNewsApi.getNews(NewspaperHelper.getTypeChannel(channel)+"", String.valueOf(timeInMillis),
-                    NewspaperRepository.MAX_NEWS).execute().body();
+            bunchOfNews = mNewsApi.getNews(NewspaperHelper.getTypeChannel(channel),
+                    String.valueOf(timeInMillis),
+                    NewspaperRepository.MAX_NEWS)
+                    .execute().body();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {

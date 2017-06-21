@@ -14,7 +14,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import evich.newsapp.dagger.module.ApplicationModule;
+import evich.newsapp.dagger.extras.ActivityContext;
 import evich.newsapp.data.News;
 import evich.newsapp.data.source.LoaderResult;
 import evich.newsapp.data.source.NewsLoader;
@@ -42,7 +42,7 @@ public class NewsPresenter implements NewsContract.Presenter, LoaderManager
     private Handler mHandler = new Handler();
 
     @Inject
-    public NewsPresenter(@ApplicationModule.ActivityContext Context context,
+    public NewsPresenter(@ActivityContext Context context,
                          @NonNull LoaderManager loaderManager,
                          @NonNull NewspaperRepository newspaperRepository) {
         mContext = checkNotNull(context, "context cannot be null");

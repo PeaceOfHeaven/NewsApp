@@ -14,7 +14,7 @@ import retrofit2.http.Query;
 public interface NewsApi {
 
     @GET(EndPoints.GET_NEWS_BY_TIME)
-    Call<List<News>> getNews(@Query("typechannel") String channel
+    Call<List<News>> getNews(@Query("typechannel") int channel
                         , @Query("time") String time
                         , @Query("num_row_of_page") int numPage);
 }

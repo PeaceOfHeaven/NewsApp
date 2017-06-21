@@ -9,7 +9,8 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import evich.newsapp.dagger.module.ApplicationModule;
+import evich.newsapp.dagger.extras.Local;
+import evich.newsapp.dagger.extras.Remote;
 import evich.newsapp.data.News;
 import evich.newsapp.helper.NewspaperHelper;
 
@@ -34,8 +35,8 @@ public class NewspaperRepository implements NewspaperDataSource {
     }
 
     @Inject
-    public NewspaperRepository(@ApplicationModule.Remote NewspaperDataSource newspaperRemoteDataSource,
-                               @ApplicationModule.Local NewspaperDataSource newspaperLocalDataSource) {
+    public NewspaperRepository(@Remote NewspaperDataSource newspaperRemoteDataSource,
+                               @Local NewspaperDataSource newspaperLocalDataSource) {
         checkNotNull(newspaperLocalDataSource);
         checkNotNull(newspaperRemoteDataSource);
 
@@ -79,18 +80,19 @@ public class NewspaperRepository implements NewspaperDataSource {
         }
 
         if (bunchOfNews == null || bunchOfNews.isEmpty()) {
-            bunchOfNews = mNewspaperRemoteDataSource.getNews(channel);
-            mNewspaperLocalDataSource.saveBunchOfNews(bunchOfNews);
+            getNewsFromRemoteAndSaveLocal(channel);
             bunchOfNews = mNewspaperLocalDataSource.getNews(channel);
         }
         processLoadedNews(channel, bunchOfNews);
         return mBunchOfNewsByChannel.get(channel);
     }
 
+    private void getNewsFromRemoteAndSaveLocal(String channel) {
+        List<News> bunchOfNews = mNewspaperRemoteDataSource.getNews(channel);
+        mNewspaperLocalDataSource.saveBunchOfNews(bunchOfNews);
+    }
+
     private void processLoadedNews(String channel, List<News> bunchOfNews) {
-        if (bunchOfNews == null || bunchOfNews.isEmpty()) {
-            return;
-        }
         if (mBunchOfNewsByChannel == null) {
             mBunchOfNewsByChannel = new LinkedHashMap<>();
         }

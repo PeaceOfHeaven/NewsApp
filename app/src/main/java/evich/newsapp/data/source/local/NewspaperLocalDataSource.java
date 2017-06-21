@@ -27,6 +27,7 @@ import static evich.newsapp.data.source.local.NewsPersistenceContract.NewsEntry;
 @Singleton
 public class NewspaperLocalDataSource implements NewspaperDataSource {
 
+    private static final String TAG = NewspaperLocalDataSource.class.getSimpleName();
     private NewspaperDbHelper mDbHelper;
 
     @Inject
@@ -59,7 +60,7 @@ public class NewspaperLocalDataSource implements NewspaperDataSource {
                     }, null, null, NewsEntry.COLUMN_NAME_PUBLIC_DATE + " DESC");
 
             if (c != null && c.getCount() > 0) {
-                Log.d("DBHelper", "Local: " + channel + "-" + c.getCount());
+                Log.d(TAG, "Retrieve: " + channel + "-" + c.getCount());
 
                 while (c.moveToNext()) {
                     String newsId = c
@@ -93,9 +94,9 @@ public class NewspaperLocalDataSource implements NewspaperDataSource {
             if (c != null) {
                 c.close();
             }
-
         } catch (IllegalStateException e) {
             // Send to analytics, log etc
+            Log.e(TAG, "Get news failed!", e);
         }
         return bunchOfNews;
     }
@@ -136,7 +137,7 @@ public class NewspaperLocalDataSource implements NewspaperDataSource {
                 return true;
             } catch (IllegalStateException e) {
                 // Send to analytics, log etc
-                Log.e("Nhat", e.getMessage(), e);
+                Log.e(TAG, "Insert failed", e);
             } finally {
                 db.endTransaction();
             }

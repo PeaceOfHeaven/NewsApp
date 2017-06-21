@@ -11,6 +11,7 @@ import javax.inject.Scope;
 
 import dagger.Module;
 import dagger.Provides;
+import evich.newsapp.dagger.extras.ActivityContext;
 
 /**
  * Created by Nhat on 6/9/2017.
@@ -25,7 +26,7 @@ public class NewsActivityModule {
     }
 
     @Provides
-    @ApplicationModule.ActivityContext
+    @ActivityContext
     Context provideContext() {
         return mActivity;
     }

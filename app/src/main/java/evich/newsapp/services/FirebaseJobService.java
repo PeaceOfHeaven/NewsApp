@@ -52,45 +52,53 @@ public class FirebaseJobService extends JobService {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "onCreate");
+        Log.d(TAG, "FirebaseJobService onCreate");
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "onDestroy");
+        Log.d(TAG, "FirebaseJobService onDestroy");
     }
 
     @Override
-    public boolean onStartJob(final JobParameters jobParameters) {
+    public boolean onStartJob(JobParameters jobParameters) {
         if (jobParameters.getTag().equals(UPDATE_NEWS)) {
-            mThreadPool.execute(new Runnable() {
-                @Override
-                public void run() {
-                    NewsApi newsApi = getApplicationComponent().getNewsApi();
-                    String[] channels = NewspaperHelper.getNewsChannels();
-                    for (String channel : channels) {
-                        List<News> bunchOfNews;
-                        try {
-                            bunchOfNews = newsApi.getNews(NewspaperHelper.getTypeChannel(channel)+"",
-                                    String.valueOf(System.currentTimeMillis()), NewspaperRepository.MAX_NEWS)
-                                    .execute()
-                                    .body();
-                            Log.d(TAG, "GET: " + bunchOfNews.size());
-                            storeBunchOfNews(bunchOfNews);
-                        } catch (IOException e) {
-                            Log.e(TAG, "Failed to GET " + channel, e);
-                        }
-                    }
-                    jobFinished(jobParameters, false);
-                }
-            });
+            doUpdateNews(jobParameters);
         }
         return true;
     }
 
-    private void storeBunchOfNews(final List<News> bunchOfNews) {
+    private void doUpdateNews(final JobParameters jobParameters) {
+        mThreadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                NewsApi newsApi = getApplicationComponent().getNewsApi();
+                String[] channels = NewspaperHelper.getNewsChannels();
+                for (String channel : channels) {
+                    List<News> bunchOfNews = fetchNewsFromRemote(channel, newsApi);
+                    updateRepository(bunchOfNews);
+                }
+                jobFinished(jobParameters, false);
+            }
+        });
+    }
+
+    private List<News> fetchNewsFromRemote(String channel, NewsApi newsApi) {
+        try {
+            return newsApi.getNews(NewspaperHelper.getTypeChannel(channel),
+                    String.valueOf(System.currentTimeMillis()), NewspaperRepository.MAX_NEWS)
+                    .execute()
+                    .body();
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to GET " + channel, e);
+        }
+        return null;
+    }
+
+    private void updateRepository(final List<News> bunchOfNews) {
         if(bunchOfNews != null && !bunchOfNews.isEmpty()) {
+            Log.d(TAG, "GET: " + bunchOfNews.get(0).getChannelTitle() + "-" + bunchOfNews.size());
             mThreadPool.execute(new Runnable() {
                 @Override
                 public void run() {

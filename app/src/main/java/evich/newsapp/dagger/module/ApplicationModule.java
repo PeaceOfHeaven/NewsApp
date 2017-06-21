@@ -2,15 +2,14 @@ package evich.newsapp.dagger.module;
 
 import android.content.Context;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
-import javax.inject.Qualifier;
 import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
 import evich.newsapp.NewsApplication;
+import evich.newsapp.dagger.extras.ApplicationContext;
+import evich.newsapp.dagger.extras.Local;
+import evich.newsapp.dagger.extras.Remote;
 import evich.newsapp.data.source.NewspaperDataSource;
 import evich.newsapp.data.source.local.NewspaperDbHelper;
 import evich.newsapp.data.source.local.NewspaperLocalDataSource;
@@ -55,30 +54,7 @@ public class ApplicationModule {
 
     @Singleton
     @Provides
-    @ApplicationContext
     NewspaperDbHelper provideNewspaperDbHelper(@ApplicationContext Context context) {
         return new NewspaperDbHelper(context);
-    }
-
-    @Qualifier
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface Local {
-
-    }
-
-    @Qualifier
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface Remote {
-
-    }
-
-    @Qualifier
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface ActivityContext {
-    }
-
-    @Qualifier
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface ApplicationContext {
     }
 }

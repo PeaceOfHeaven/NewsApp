@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import evich.newsapp.dagger.module.ApplicationModule;
+import evich.newsapp.dagger.extras.ApplicationContext;
 
 /**
  * Created by W8-64 on 08/06/2016.
@@ -20,12 +20,12 @@ public class NewspaperDbHelper extends SQLiteOpenHelper {
 
     private static final String TEXT_TYPE = " TEXT";
 
-    private static final String INTEGER_TYPE = " INTEGER_TYPE";
+    private static final String INTEGER_TYPE = " INTEGER";
 
     private static final String COMMA_SEP = ",";
 
     @Inject
-    public NewspaperDbHelper(@ApplicationModule.ApplicationContext Context context) {
+    public NewspaperDbHelper(@ApplicationContext Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
@@ -50,7 +50,6 @@ public class NewspaperDbHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + NewsPersistenceContract.NewsEntry.TABLE_NAME);
-
         onCreate(db);
     }
 }
