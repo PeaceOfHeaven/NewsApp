@@ -58,11 +58,11 @@ public class NewsApplication extends Application {
                 .setService(FirebaseJobService.class) // the JobService that will be called
                 .setTag(FirebaseJobService.UPDATE_NEWS);  // uniquely identifies the job
 
-        final int periodicity = (int) TimeUnit.MINUTES.toSeconds(6); // Every 6 minutes periodicity expressed as seconds
-        final int toleranceInterval = (int) TimeUnit.MINUTES.toSeconds(2); // a small(ish) window of time when triggering is OK
+        final int periodicity = (int) TimeUnit.MINUTES.toSeconds(20); // Every 20 minutes periodicity expressed as seconds
+        final int toleranceInterval = (int) TimeUnit.MINUTES.toSeconds(5); // a small(ish) window of time when triggering is OK
 
         builder.setTrigger(Trigger.executionWindow(periodicity, periodicity + toleranceInterval));
-        builder.addConstraint(Constraint.ON_UNMETERED_NETWORK);
+        builder.addConstraint(Constraint.ON_ANY_NETWORK);
         builder.setLifetime(Lifetime.FOREVER);
         builder.setRecurring(true);
         builder.setRetryStrategy(RetryStrategy.DEFAULT_LINEAR);

@@ -6,6 +6,8 @@ import com.firebase.jobdispatcher.JobParameters;
 import com.firebase.jobdispatcher.JobService;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -27,6 +29,7 @@ public class FirebaseJobService extends JobService {
 
     public static final String TAG = FirebaseJobService.class.getSimpleName();
     public static final String UPDATE_NEWS = "update_news";
+    public static final String FAILED_CHANNELS_KEY = "failed_channels";
 
     /*
      * Gets the number of available cores
@@ -74,12 +77,27 @@ public class FirebaseJobService extends JobService {
             @Override
             public void run() {
                 NewsApi newsApi = getApplicationComponent().getNewsApi();
-                String[] channels = NewspaperHelper.getNewsChannels();
+                List<String> channels = jobParameters.getExtras()
+                        .getStringArrayList(FAILED_CHANNELS_KEY);
+                if (channels == null || channels.isEmpty()) {
+                    channels = Arrays.asList(NewspaperHelper.getNewsChannels());
+                }
+                ArrayList<String> failedChannels =
+                        new ArrayList<>(NewspaperHelper.NUM_OF_CHANNELS);
                 for (String channel : channels) {
                     List<News> bunchOfNews = fetchNewsFromRemote(channel, newsApi);
-                    updateRepository(bunchOfNews);
+                    if (bunchOfNews != null && !bunchOfNews.isEmpty()) {
+                        updateRepository(bunchOfNews);
+                    } else {
+                        failedChannels.add(channel);
+                    }
                 }
-                jobFinished(jobParameters, false);
+                boolean shouldReschedule = false;
+                if(!failedChannels.isEmpty()) {
+                    shouldReschedule = true;
+                }
+                jobParameters.getExtras().putStringArrayList(FAILED_CHANNELS_KEY, failedChannels);
+                jobFinished(jobParameters, shouldReschedule);
             }
         });
     }
@@ -97,17 +115,15 @@ public class FirebaseJobService extends JobService {
     }
 
     private void updateRepository(final List<News> bunchOfNews) {
-        if(bunchOfNews != null && !bunchOfNews.isEmpty()) {
-            Log.d(TAG, "GET: " + bunchOfNews.get(0).getChannelTitle() + "-" + bunchOfNews.size());
-            mThreadPool.execute(new Runnable() {
-                @Override
-                public void run() {
-                    getApplicationComponent()
-                            .getNewspaperRepository()
-                            .saveBunchOfNews(bunchOfNews);
-                }
-            });
-        }
+        Log.d(TAG, "GET: " + bunchOfNews.get(0).getChannelTitle() + "-" + bunchOfNews.size());
+        mThreadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                getApplicationComponent()
+                        .getNewspaperRepository()
+                        .saveBunchOfNews(bunchOfNews);
+            }
+        });
     }
 
     private ApplicationComponent getApplicationComponent() {

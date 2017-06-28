@@ -2,12 +2,12 @@ package evich.newsapp.data.source.local;
 
 import android.content.ContentValues;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -15,7 +15,6 @@ import javax.inject.Singleton;
 
 import evich.newsapp.data.News;
 import evich.newsapp.data.source.NewspaperDataSource;
-import evich.newsapp.data.source.NewspaperRepository;
 import evich.newsapp.helper.NewspaperHelper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -109,17 +108,7 @@ public class NewspaperLocalDataSource implements NewspaperDataSource {
             SQLiteDatabase db = mDbHelper.getWritableDatabase();
             db.beginTransaction();
             try {
-                int channelType = bunchOfNews.get(0).getChannelType();
-                int count = (int) DatabaseUtils.queryNumEntries(db, NewsEntry.TABLE_NAME,
-                        NewsEntry.COLUMN_NAME_CHANNEL + "=?",
-                        new String[]{
-                                String.valueOf(channelType)
-                        });
-                int amount = bunchOfNews.size() + count - NewspaperRepository.MAX_NEWS;
-                if (amount > 0) {
-                    clearRows(db, channelType, amount);
-                }
-
+                clearOldNews(db, bunchOfNews.get(0).getChannelType());
                 for (News news : bunchOfNews) {
                     ContentValues values = new ContentValues();
                     values.put(NewsEntry.COLUMN_NAME_NEWS_ID, news.getId());
@@ -136,7 +125,6 @@ public class NewspaperLocalDataSource implements NewspaperDataSource {
                 db.setTransactionSuccessful();
                 return true;
             } catch (IllegalStateException e) {
-                // Send to analytics, log etc
                 Log.e(TAG, "Insert failed", e);
             } finally {
                 db.endTransaction();
@@ -145,20 +133,16 @@ public class NewspaperLocalDataSource implements NewspaperDataSource {
         return false;
     }
 
-    private void clearRows(SQLiteDatabase db, int channelType, int amount) {
-        db.execSQL("DELETE FROM " + NewsEntry.TABLE_NAME
-                + " WHERE " + NewsEntry.COLUMN_NAME_NEWS_ID
-                + " NOT IN "
-                + "(SELECT " + NewsEntry.COLUMN_NAME_NEWS_ID
-                + " FROM " + NewsEntry.TABLE_NAME
-                + " WHERE " + NewsEntry.COLUMN_NAME_CHANNEL + "=" + channelType
-                + " ORDER BY " + NewsEntry.COLUMN_NAME_PUBLIC_DATE
-                + " DESC LIMIT " + amount + " OFFSET 0)");
+    private void clearOldNews(SQLiteDatabase db, int channelType) {
+        long currentTime = Calendar.getInstance().getTimeInMillis();
+        db.delete(NewsEntry.TABLE_NAME, NewsEntry.COLUMN_NAME_PUBLIC_DATE + "<=? AND "
+                                        + NewsEntry.COLUMN_NAME_CHANNEL + "=?",
+                new String[]{Long.toString(currentTime), Integer.toString(channelType)});
     }
 
     @Override
     public void refreshNews(String channel) {
-
+        throw new UnsupportedOperationException("Invalid operation for refresh news");
     }
 
 }
