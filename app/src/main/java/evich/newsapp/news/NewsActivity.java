@@ -1,12 +1,14 @@
 package evich.newsapp.news;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.ViewGroup;
+import android.view.Window;
 
 import com.astuetz.PagerSlidingTabStrip;
 
@@ -42,7 +44,7 @@ public class NewsActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(R.style.AppTheme);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.app_bar_news);
 
@@ -50,21 +52,18 @@ public class NewsActivity extends BaseActivity {
         getWindow().setBackgroundDrawable(null);
         getActivityComponent().inject(this);
 
-        initialize();
-    }
-
-    private void initialize() {
-        initializeToolbar();
-        initializeViews();
-    }
-
-    private void initializeViews() {
         mNewsPager.setOffscreenPageLimit(NewspaperHelper.NUM_OF_CHANNELS);
         mPagerAdapter = new NewsPagerAdapter(getSupportFragmentManager());
         mNewsPager.setAdapter(mPagerAdapter);
 
         PagerSlidingTabStrip pagerTabStrip = (PagerSlidingTabStrip) findViewById(R.id.pager_tab_strip);
         pagerTabStrip.setViewPager(mNewsPager);
+
+        initializeToolbar();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            reportFullyDrawn();
+        }
     }
 
     @Override
@@ -100,7 +99,6 @@ public class NewsActivity extends BaseActivity {
         @Override
         public Fragment getItem(int position) {
             String channel = pageTitles[position];
-
             NewsFragment fragment = (NewsFragment) NewsFragment.getInstance(channel);
             mNewsPresenter.attachViewByChannel(channel, fragment);
             return fragment;
@@ -120,7 +118,6 @@ public class NewsActivity extends BaseActivity {
         public void destroyItem(ViewGroup container, int position, Object object) {
             String channel = pageTitles[position];
             mNewsPresenter.detachViewByChannel(channel);
-
             super.destroyItem(container, position, object);
         }
     }

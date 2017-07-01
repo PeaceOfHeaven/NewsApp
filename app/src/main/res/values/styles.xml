@@ -1,19 +1,17 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="BaseTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
-
-    <style name="AppTheme.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
+    
+    <style name="AppTheme" parent="@style/BaseTheme">
     </style>
     
-    <style name="AppTheme.Transparent">
+    <style name="AppTheme.Transparent" parent="@style/Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowContentOverlay">@null</item>
@@ -22,14 +20,37 @@
         <item name="android:backgroundDimEnabled">false</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
+    <style name="AppTheme.AppBarOverlay" parent="@style/ThemeOverlay.AppCompat.Light"/>
 
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>
+    <style name="AppTheme.PopupOverlay" parent="@style/ThemeOverlay.AppCompat.Light"/>
 
-    <style name="SplashScreenStyle" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="SplashScreenStyle" parent="@style/Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowBackground">@drawable/background_splash</item>
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
     </style>
-
+    
+    <style name="PlaceHolderUI" parent="@style/BaseTheme">
+        <!-- Customize your theme here. -->
+        <item name="android:windowTitleSize">128dp</item>
+        <item name="android:windowTitleStyle">@style/CustomWindowTitle</item>
+        <item name="android:windowTitleBackgroundStyle">@style/CustomWindowTitleBackground</item>
+        <item name="android:windowNoTitle">false</item>
+        <item name="android:windowBackground">@color/pager_background</item>
+    </style>
+    
+    <!-- Set the theme for the window title -->
+    <style name="CustomWindowTitle">
+        <item name="android:singleLine">true</item>
+        <item name="android:textAppearance">@style/CustomWindowTitleText</item>
+    </style>
+    
+    <style name="CustomWindowTitleText">
+        <item name="android:textColor">@android:color/transparent</item>
+    </style>
+    
+    <!-- Changes the background color of the title bar -->
+    <style name="CustomWindowTitleBackground">
+        <item name="android:background">@android:color/white</item>
+    </style>
 </resources>

@@ -10,7 +10,6 @@ import com.firebase.jobdispatcher.Lifetime;
 import com.firebase.jobdispatcher.RetryStrategy;
 import com.firebase.jobdispatcher.Trigger;
 import com.squareup.leakcanary.LeakCanary;
-import com.squareup.leakcanary.RefWatcher;
 
 import java.util.concurrent.TimeUnit;
 
@@ -26,7 +25,6 @@ import evich.newsapp.services.FirebaseJobService;
 public class NewsApplication extends Application {
 
     private ApplicationComponent mApplicationComponent;
-    private RefWatcher refWatcher;
 
     @Override
     public void onCreate() {
@@ -36,16 +34,11 @@ public class NewsApplication extends Application {
             // You should not init your app in this process.
             return;
         }
-        refWatcher = LeakCanary.install(this);
 
         mApplicationComponent = DaggerApplicationComponent.builder()
                 .applicationModule(new ApplicationModule(this))
                 .build();
         kickoffService();
-    }
-
-    public RefWatcher getRefWatcher() {
-        return refWatcher;
     }
 
     public ApplicationComponent getApplicationComponent() {

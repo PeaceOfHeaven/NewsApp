@@ -15,7 +15,6 @@
 		android:adjustViewBounds="true"
 		android:scaleType="centerCrop" />
 	
-	
 	<TextView
 		android:id="@+id/newsTitle_txtView"
 		style="@style/TextAppearance.AppCompat.Body2"

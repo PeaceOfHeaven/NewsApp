@@ -30,6 +30,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class NewsPresenter implements NewsContract.Presenter, LoaderManager
         .LoaderCallbacks<LoaderResult>, NewspaperRepository.NewsRepositoryObserver {
 
+    private static final String TAG = NewsPresenter.class.getSimpleName();
     private final int NEWS_LOADER_ID = 333;
     private static final String CHANNEL_BUNDLE_KEY = "channel";
 
@@ -71,10 +72,12 @@ public class NewsPresenter implements NewsContract.Presenter, LoaderManager
     public void loadNews(String channel, boolean refresh) {
         NewsContract.View view = mViewsByChannel.get(channel);
         if (refresh) {
-            if(!NetworkHelper.isOnline(mContext)) {
-                view.showNetworkNotAvailable();
+            if(view != null) {
+                if (!NetworkHelper.isOnline(mContext)) {
+                    view.showNetworkNotAvailable();
+                }
+                view.setRefreshIndicator(true);
             }
-            view.setRefreshIndicator(true);
             mNewspaperRepository.refreshNews(channel);
             return;
         }
@@ -118,7 +121,11 @@ public class NewsPresenter implements NewsContract.Presenter, LoaderManager
 
     @Override
     public void openNewsDetail(News news) {
-        mViewsByChannel.get(news.getChannelTitle()).showNewsDetailUi(news.getLink());
+        if (NetworkHelper.isOnline(mContext)) {
+            mViewsByChannel.get(news.getChannelTitle()).showNewsDetailUi(news.getLink());
+        } else {
+            mViewsByChannel.get(news.getChannelTitle()).showNetworkNotAvailable();
+        }
     }
 
     @Override
@@ -128,7 +135,7 @@ public class NewsPresenter implements NewsContract.Presenter, LoaderManager
 
             NewsContract.View view = mViewsByChannel.get(channel);
             if (view != null) {
-                view.setLoadingIndicator(true);
+                view.setRefreshIndicator(true);
             }
 
             if (mNewsLoader == null) {
@@ -146,7 +153,7 @@ public class NewsPresenter implements NewsContract.Presenter, LoaderManager
 
         String channel = newsLoaderResult.getChannel();
         mRequestChannels.remove(channel);
-        Log.d("Nhat", "Loaded " + channel + ": " + bunchOfNews.size());
+        Log.d(TAG, "Loaded " + channel + ": " + bunchOfNews.size());
 
         final NewsContract.View view = mViewsByChannel.get(channel);
         if (view != null) {
@@ -157,9 +164,8 @@ public class NewsPresenter implements NewsContract.Presenter, LoaderManager
                     @Override
                     public void run() {
                         view.setRefreshIndicator(false);
-                        view.setLoadingIndicator(false);
                     }
-                }, 700);
+                }, 300);
                 view.showNews(bunchOfNews);
             }
         }
@@ -168,7 +174,7 @@ public class NewsPresenter implements NewsContract.Presenter, LoaderManager
 
     @Override
     public void onLoaderReset(Loader<LoaderResult> loader) {
-        Log.d("Newspaper", "onLoaderReset called");
+        Log.d(TAG, "onLoaderReset called");
     }
 
     @Override

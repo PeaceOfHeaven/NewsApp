@@ -1,40 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    tools:context=".news.NewsActivity">
-
-    <android.support.design.widget.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
-
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            app:layout_scrollFlags="scroll|enterAlways"
-            app:popupTheme="@style/AppTheme.PopupOverlay"/>
-
-            <com.astuetz.PagerSlidingTabStrip
-                android:id="@+id/pager_tab_strip"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="?attr/colorPrimary"
-                app:pstsIndicatorColor="@color/colorAccent"
-                app:pstsPaddingMiddle="true"
-                app:pstsTabTextColor="@android:color/white"
-                app:pstsIndicatorHeight="3dp"
-                app:pstsShouldExpand="true"
-                />
-
-    </android.support.design.widget.AppBarLayout>
-
-    <include layout="@layout/content_news"/>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	tools:context=".news.NewsActivity">
+	
+	<android.support.design.widget.AppBarLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:theme="@style/AppTheme.AppBarOverlay">
+		
+		<android.support.v7.widget.Toolbar
+			android:id="@+id/toolbar"
+			android:layout_width="match_parent"
+			android:layout_height="?attr/actionBarSize"
+			android:background="@color/colorPrimary"
+			app:layout_scrollFlags="scroll|enterAlways"
+			app:popupTheme="@style/AppTheme.PopupOverlay" />
+		
+		<com.astuetz.PagerSlidingTabStrip
+			android:id="@+id/pager_tab_strip"
+			android:layout_width="match_parent"
+			android:layout_height="?attr/actionBarSize"
+			android:background="@color/colorPrimary"
+			app:pstsIndicatorColor="@color/colorAccent"
+			app:pstsIndicatorHeight="3dp"
+			app:pstsPaddingMiddle="true"
+			app:pstsShouldExpand="true"
+			app:pstsTabTextColor="@android:color/black" />
+	
+	</android.support.design.widget.AppBarLayout>
+	
+	<include layout="@layout/content_news" />
 
 </android.support.design.widget.CoordinatorLayout>

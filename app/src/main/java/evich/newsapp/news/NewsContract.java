@@ -14,8 +14,6 @@ public interface NewsContract {
 
     interface View extends BaseView<Presenter> {
 
-        void setLoadingIndicator(boolean active);
-
         void setRefreshIndicator(boolean active);
 
         void showNews(List<News> bunchOfNews);
