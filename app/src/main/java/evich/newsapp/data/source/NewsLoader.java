@@ -33,13 +33,13 @@ public class NewsLoader extends AsyncTaskLoader<LoaderResult> {
 
     @Override
     protected void onStartLoading() {
-        if (mNewspaperRepository.cachedNewsAvailable(mCurrentChannel)) {
+        boolean isCachedAvailable = mNewspaperRepository.cachedNewsAvailable(mCurrentChannel);
+        if (isCachedAvailable) {
             deliverResult(new NewsLoaderResult(mCurrentChannel,
                     mNewspaperRepository.getCachedNews(mCurrentChannel)));
         }
 
-        if (takeContentChanged() || !mNewspaperRepository
-                                    .cachedNewsAvailable(mCurrentChannel)) {
+        if (takeContentChanged() || !isCachedAvailable) {
             // When a change has  been delivered or the repository cache isn't available, we force
             // a load.
             forceLoad();

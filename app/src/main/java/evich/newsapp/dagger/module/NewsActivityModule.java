@@ -4,11 +4,6 @@ import android.content.Context;
 import android.support.v4.app.LoaderManager;
 import android.support.v7.app.AppCompatActivity;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
-import javax.inject.Scope;
-
 import dagger.Module;
 import dagger.Provides;
 import evich.newsapp.dagger.extras.ActivityContext;
@@ -36,8 +31,4 @@ public class NewsActivityModule {
         return mActivity.getSupportLoaderManager();
     }
 
-    @Scope
-    @Retention(RetentionPolicy.RUNTIME)
-    public @interface PerActivity {
-    }
 }

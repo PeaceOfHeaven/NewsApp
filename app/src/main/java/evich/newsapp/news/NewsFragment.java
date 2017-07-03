@@ -11,6 +11,7 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,6 +47,9 @@ public class NewsFragment extends Fragment implements NewsContract.View {
 
     private NewsAdapter mNewsAdapter;
     private String mChannel;
+    private boolean hasPendingUpdate;
+    private boolean shouldUpdateNow = true;
+    private List<News> mBunchOfNews;
 
     public static Fragment getInstance(@NonNull String channel) {
         checkNotNull(channel);
@@ -63,7 +67,7 @@ public class NewsFragment extends Fragment implements NewsContract.View {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable
-    Bundle savedInstanceState) {
+                                        Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_news, container, false);
         ButterKnife.bind(this, view);
 
@@ -78,6 +82,8 @@ public class NewsFragment extends Fragment implements NewsContract.View {
                     .getDimensionPixelSize(R.dimen.grid_spacing_item_size), false));
         } else {
             layoutManager = new GridLayoutManager(getActivity(), 2);
+            layoutManager.setItemPrefetchEnabled(true);
+
             mNewsRecylerView.addItemDecoration(new SpaceItemDecoration(getResources()
                     .getDimensionPixelSize(R.dimen.grid_spacing_item_size), true));
             ((GridLayoutManager) layoutManager).setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
@@ -94,6 +100,7 @@ public class NewsFragment extends Fragment implements NewsContract.View {
         mNewsRecylerView.setLayoutManager(layoutManager);
         mNewsRecylerView.setHasFixedSize(true);
 
+
         mSwipeRefreshLayout.setScrollUpChild(mNewsRecylerView);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -107,7 +114,8 @@ public class NewsFragment extends Fragment implements NewsContract.View {
             mChannel = args.getString(CHANNEL_ARGUMENT_KEY);
         }
 
-        mNewsAdapter = new NewsAdapter(new ArrayList<News>(0), new NewsAdapter.NewsItemListener() {
+        mBunchOfNews = new ArrayList<>(0);
+        mNewsAdapter = new NewsAdapter(mBunchOfNews, new NewsAdapter.NewsItemListener() {
             @Override
             public void onNewsClicked(News news) {
                 mPresenter.openNewsDetail(news);
@@ -123,6 +131,25 @@ public class NewsFragment extends Fragment implements NewsContract.View {
         mPresenter.loadNews(mChannel, false);
     }
 
+    public void setShouldUpdateNow(boolean enable) {
+        shouldUpdateNow = enable;
+        if(shouldUpdateNow && hasPendingUpdate) {
+            hasPendingUpdate = false;
+            /*new Handler().postDelayed(new Runnable() {
+                public void run() {
+                    mNewsAdapter.replaceData(mBunchOfNews);
+                }
+            }, 150);*/
+            mNewsAdapter.replaceData(mBunchOfNews);
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        Log.d("PagerActivity", hashCode() + ": ondetach");
+    }
+
     @Override
     public void setRefreshIndicator(boolean active) {
         mSwipeRefreshLayout.setRefreshing(active);
@@ -136,7 +163,19 @@ public class NewsFragment extends Fragment implements NewsContract.View {
     @Override
     public void showNews(List<News> bunchOfNews) {
         if (bunchOfNews != null && !bunchOfNews.isEmpty()) {
-            mNewsAdapter.replaceData(bunchOfNews);
+            if(mNewsAdapter == null) {
+                Log.d("PagerActivity", "adapter nul");
+            } else {
+                mBunchOfNews = bunchOfNews;
+                if(shouldUpdateNow) {
+                    Log.d("PagerActivity", "update now");
+                    hasPendingUpdate = false;
+                    mNewsAdapter.replaceData(mBunchOfNews);
+                } else {
+                    Log.d("PagerActivity", "should not update now");
+                    hasPendingUpdate = true;
+                }
+            }
         }
     }
 

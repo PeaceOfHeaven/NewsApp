@@ -17,6 +17,6 @@ public class DummyActivity extends AppCompatActivity {
             public void run() {
                 finish();
             }
-        }, 500);
+        }, 300);
     }
 }

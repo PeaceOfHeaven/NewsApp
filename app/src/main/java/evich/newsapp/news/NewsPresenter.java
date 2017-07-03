@@ -101,9 +101,9 @@ public class NewsPresenter implements NewsContract.Presenter, LoaderManager
                 Bundle bundle = new Bundle();
                 bundle.putString(CHANNEL_BUNDLE_KEY, channel);
                 mLoaderManager.initLoader(NEWS_LOADER_ID, bundle, this);
-            } else if (!mNewsLoader.isLoading()) {
+            } else if (!mNewsLoader.isLoading() && mNewsLoader.isStarted()) {
                 mNewsLoader.setCurrentChannel(channel);
-                mNewsLoader.startLoading();
+                mNewsLoader.forceLoad();
             }
         }
     }
