@@ -18,6 +18,10 @@ I'm using **[Model View Presenter](https://en.wikipedia.org/wiki/Model%E2%80%93v
 
 **[LeakCanary](https://github.com/square/leakcanary)** a handy tool detecting memory leaks.
 
+**[DiffUtil](https://developer.android.com/reference/android/support/v7/util/DiffUtil.html)** improves updating content of recyclerview instead of updating whole content, by calculating the diffrence between old contents and new contents then the library dispatches changes to recyclerview.
+
+Improving user experience by postponing loading of content when swipping between pages or switching tabs.
+
 Because my friend doesn't update RESTful API currently, so i have to use current RESTful API design to make the app.
 
 - **Next goals**
@@ -38,9 +42,9 @@ Screens
 
 - **Small Screen**
 
-|<img src="https://github.com/PeaceOfHeaven/NewsApp/blob/master/screenshots/Screenshot_1497169024.png" width="318" height="560" >||<img src="https://github.com/PeaceOfHeaven/NewsApp/blob/master/screenshots/Screenshot_1497169035.png" width="318" height="560" >|
+<img src="https://github.com/PeaceOfHeaven/NewsApp/blob/master/screenshots/Screenshot_1498816338.png" width="318" height="560" ><img src="https://github.com/PeaceOfHeaven/NewsApp/blob/master/screenshots/Screenshot_1498816611.png" width="318" height="560" >
 
 
 - **Tablet**
-<img src="https://github.com/PeaceOfHeaven/NewsApp/blob/master/screenshots/ezgif.com-video-to-gif.gif" width="318" height="560" >
+<img src="https://github.com/PeaceOfHeaven/NewsApp/blob/master/screenshots/demo.gif" width="318" height="560" >
 
